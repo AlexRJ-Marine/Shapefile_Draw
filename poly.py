@@ -12,8 +12,10 @@ BLUE=(0,0,255)
 RED=(255,0,0)
 
 # Position of top left corner in degrees
-#zero_point = (2,40)
+
 # Width and height of map in degrees
+image_height = 10
+
 scaling_factor = 100
 
 def image_dims(path): # Determines the width and height in pixels of an image
@@ -32,14 +34,17 @@ class Game():
     def __init__(self):
         self.clock = pygame.time.Clock()
         self.running = True
+        # Call R script to plot a map and save as .png 
+        subprocess.call("rscript plot.R", shell=True)
+        image_resize('map.png') # Re size to 1000 X 1000 pixels
         self.background_image = pygame.image.load("1000_1000.png")
-        subprocess.call("rscript plot.r", shell=True)
+
+        # Get position of top left corner in degrees from csv
         self.data_df = pd.read_csv('data.csv')
         self.x_min = self.data_df['x_range'][0]
         self.x_max = self.data_df['x_range'][1]
         self.y_min = self.data_df['y_range'][0]
         self.y_max = self.data_df['y_range'][1]
-
         self.zero_point = (self.x_min, self.y_max)
 
     def on_init(self):
@@ -83,13 +88,12 @@ class Game():
 
                 x, y = pygame.mouse.get_pos()
                 print('X: ' + str(x) + ' ' + 'Y:' + str(y))
-
-                
                 print(three)
-                x_scaled = (x/scaling_factor) 
+
+                x_scaled = (x/scaling_factor)
                 y_scaled = (y/scaling_factor)
                 x_shifted = x_scaled + self.zero_point[0]
-                y_shifted = y_scaled + self.zero_point[1]
+                y_shifted = y_scaled + self.zero_point[1] - image_height
 
                 if 3 > three:
                     for _ in range(3):
@@ -122,6 +126,5 @@ class Game():
         self.on_cleanup()
 
 if __name__ == "__main__" :
-    image_resize('map.png')
     game = Game()
     game.on_execute()
